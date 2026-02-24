@@ -1,0 +1,33 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('store_product_pricing_price_lists', function (Blueprint $table) {
+            $table->increments('id');
+            $table->timestamps();
+            $table->softDeletes();
+            $table->string('product_pricing_price_list_id')->nullable();
+            $table->string('name')->nullable();
+            $table->string('quantity')->nullable();
+            $table->string('price')->nullable();
+            $table->string('ext_price')->nullable();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('store_product_pricing_price_lists');
+    }
+};

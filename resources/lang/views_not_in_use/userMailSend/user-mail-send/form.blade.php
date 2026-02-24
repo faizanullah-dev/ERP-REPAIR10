@@ -1,0 +1,43 @@
+<div class="form-group {{ $errors->has('user_id') ? 'has-error' : ''}}">
+    <label for="user_id" class="col-md-4 control-label">{{ 'User Id' }}</label>
+    <div class="col-md-6">
+        <input class="form-control" name="user_id" type="text" id="user_id" value="{{ $usermailsend->user_id??''}}" >
+        {!! $errors->first('user_id', '<p class="help-block">:message</p>') !!}
+    </div>
+</div><div class="form-group {{ $errors->has('subject') ? 'has-error' : ''}}">
+    <label for="subject" class="col-md-4 control-label">{{ 'Subject' }}</label>
+    <div class="col-md-6">
+        <input class="form-control" name="subject" type="text" id="subject" value="{{ $usermailsend->subject??''}}" >
+        {!! $errors->first('subject', '<p class="help-block">:message</p>') !!}
+    </div>
+</div><div class="form-group {{ $errors->has('to') ? 'has-error' : ''}}">
+    <label for="to" class="col-md-4 control-label">{{ 'To' }}</label>
+    <div class="col-md-6">
+        <input class="form-control" name="to" type="text" id="to" value="{{ $usermailsend->to??''}}" >
+        {!! $errors->first('to', '<p class="help-block">:message</p>') !!}
+    </div>
+</div><div class="form-group {{ $errors->has('cc') ? 'has-error' : ''}}">
+    <label for="cc" class="col-md-4 control-label">{{ 'Cc' }}</label>
+    <div class="col-md-6">
+        <input class="form-control" name="cc" type="text" id="cc" value="{{ $usermailsend->cc??''}}" >
+        {!! $errors->first('cc', '<p class="help-block">:message</p>') !!}
+    </div>
+</div><div class="form-group {{ $errors->has('bc') ? 'has-error' : ''}}">
+    <label for="bc" class="col-md-4 control-label">{{ 'Bc' }}</label>
+    <div class="col-md-6">
+        <input class="form-control" name="bc" type="text" id="bc" value="{{ $usermailsend->bc??''}}" >
+        {!! $errors->first('bc', '<p class="help-block">:message</p>') !!}
+    </div>
+</div><div class="form-group {{ $errors->has('description') ? 'has-error' : ''}}">
+    <label for="description" class="col-md-4 control-label">{{ 'Description' }}</label>
+    <div class="col-md-6">
+        <textarea class="form-control" rows="5" name="description" type="textarea" id="description" >{{ $usermailsend->description??''}}</textarea>
+        {!! $errors->first('description', '<p class="help-block">:message</p>') !!}
+    </div>
+</div>
+
+<div class="form-group">
+    <div class="col-md-offset-4 col-md-4">
+        <input class="btn btn-primary" type="submit" value="{{ $submitButtonText??'Create' }}">
+    </div>
+</div>

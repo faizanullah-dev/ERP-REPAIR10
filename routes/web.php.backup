@@ -1,0 +1,1087 @@
+<?php
+
+use App\Lead;
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| Laravel 11 Route Conversion Guide
+|--------------------------------------------------------------------------
+| Old Style: Route::get('path', 'ControllerName@method')
+| New Style: Route::get('path', [ControllerName::class, 'method'])
+|
+| For Resource Routes:
+| Old: Route::resource('path', 'Namespace\\ControllerName')
+| New: Route::resource('path', Namespace\ControllerName::class)
+|
+| Note: Import all controllers at the top using:
+| use App\Http\Controllers\Namespace\ControllerName;
+*/
+
+// Controller Imports - Laravel 11 Style
+use App\Http\Controllers\WebsiteController;
+use App\Http\Controllers\UsersController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\SocialLoginController;
+use App\Http\Controllers\CommonSetting\CommonSettingController;
+use App\Http\Controllers\Customer\CustomerController;
+use App\Http\Controllers\CustomerType\CustomerTypeController;
+use App\Http\Controllers\CustomerPhone\CustomerPhoneController;
+use App\Http\Controllers\ReferralSource\ReferralSourceController;
+use App\Http\Controllers\Staff\StaffController;
+use App\Http\Controllers\Lead\LeadController;
+use App\Http\Controllers\ControlPanel\ControlPanelController;
+use Illuminate\Support\Facades\Artisan;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
+
+Route::get('abc', function () {
+    $leads = Lead::where('progress_status', 1)->get();
+    return $leads;
+});
+
+
+Route::get('testing', [WebsiteController::class, 'testing'])->name('testing');
+Route::get('/', [WebsiteController::class, 'index'])->name('index')->middleware('auth');
+
+Route::group(['middleware' => ['auth', 'roles'], 'roles' => ['admin', 'user']], function () {
+    // TODO: After migrations, restore this: Route::group(['middleware' => ['auth', 'roles'], 'roles' => App\Role::get()->pluck('name')->toArray()], function () {
+    //    Route::get('/dashboard', function () {
+    //        return view('dashboard.index');
+    //    });
+    Route::get('/dashboard', [WebsiteController::class, 'dashboard']);
+    Route::get('account-settings', [UsersController::class, 'getSettings']);
+    Route::post('account-settings', [UsersController::class, 'saveSettings']);
+
+    // User Management routes
+    Route::get('users', [UsersController::class, 'getIndex']);
+    Route::get('user/create', [UsersController::class, 'create']);
+    Route::post('user/create', [UsersController::class, 'save']);
+    Route::get('user/edit/{id}', [UsersController::class, 'edit']);
+    Route::post('user/edit/{id}', [UsersController::class, 'update']);
+    Route::get('user/delete/{id}', [UsersController::class, 'delete']);
+    Route::get('user/deleted/', [UsersController::class, 'getDeletedUsers']);
+    Route::get('user/restore/{id}', [UsersController::class, 'restoreUser']);
+
+    Route::get('campaign', [WebsiteController::class, 'campaign'])->name('campaign');
+    Route::get('customize_proposals/{id}', [WebsiteController::class, 'customizeProposals'])->name('customize_proposals');
+    Route::get('customize_proposals_new/{id}', [WebsiteController::class, 'customizeProposalsNew'])->name('customize_proposals_new');
+    Route::post('store_customize_proposals', [WebsiteController::class, 'storeCustomizeProposals'])->name('store_customize_proposals');
+    Route::get('customize_proposals_edit/{id}', [WebsiteController::class, 'customizeProposalsEdit'])->name('customize_proposals_edit');
+    Route::get('customize_signature_proposals/{id}', [WebsiteController::class, 'customizeSignatureProposals'])->name('customize_signature_proposals');
+    Route::get('user_draft_proposals/{id}', [WebsiteController::class, 'userDraftProposals'])->name('user_draft_proposals');
+    Route::get('proposal_generator', [WebsiteController::class, 'proposalGenerator'])->name('proposal_generator');
+    Route::get('sub_contractor', [WebsiteController::class, 'subContractor'])->name('sub_contractor');
+    Route::post('upload_proposal_image', [WebsiteController::class, 'uploadProposalImage'])->name('upload_proposal_image');
+    Route::post('upload_proposal_screen_shot', [WebsiteController::class, 'uploadProposalScreenShot'])->name('upload_proposal_screen_shot');
+    Route::post('customize_proposals_duplicate/{id}', [WebsiteController::class, 'customizeProposalsDuplicate'])->name('customize_proposals_duplicate');
+});
+
+//Route::get('staff', [WebsiteController::class, 'staff'])->name('staff');
+Route::get('leads', [WebsiteController::class, 'leads'])->name('leads');
+Route::get('sales_team', [WebsiteController::class, 'salesTeam'])->name('sales_team');
+Route::get('target', [WebsiteController::class, 'target'])->name('target');
+Route::get('work_type', [WebsiteController::class, 'workType'])->name('work_type');
+Route::get('call', [WebsiteController::class, 'call'])->name('call');
+Route::get('customer_manager', [WebsiteController::class, 'customerManager'])->name('customer_manager');
+Route::get('user_profile', [WebsiteController::class, 'profile'])->name('user_profile')->middleware('auth');
+Route::get('change_password', [WebsiteController::class, 'changePassword'])->name('change_password')->middleware('auth');
+Route::get('terms_and_condition', [WebsiteController::class, 'termsAndCondition'])->name('terms_and_condition')->middleware('auth');
+Route::get('email', [WebsiteController::class, 'email'])->name('email');
+Route::get('new_email', [WebsiteController::class, 'newEmail'])->name('new_email');
+Route::get('message', [WebsiteController::class, 'message'])->name('message');
+Route::get('jobs_won', [WebsiteController::class, 'jobsWon'])->name('jobs_won')->middleware('auth');
+Route::get('performance', [WebsiteController::class, 'performance'])->name('performance');
+Route::get('summary', [WebsiteController::class, 'summary'])->name('summary')->middleware('auth');
+Route::get('by_salesman', [WebsiteController::class, 'bySalesManReport'])->name('by_salesman')->middleware('auth');
+Route::get('job_listings/{representative_id?}', [WebsiteController::class, 'jobListings'])->name('job_listings')->middleware('auth');
+Route::get('company_performance', [WebsiteController::class, 'companyPerformance'])->name('company_performance');
+Route::get('profit_loss_analysis', [WebsiteController::class, 'profitLossAnalysis'])->name('profit_loss_analysis');
+Route::get('create_leads', [WebsiteController::class, 'createLeads'])->name('create_leads');
+Route::get('email_templating', [WebsiteController::class, 'emailTemplating'])->name('email_templating');
+Route::get('customer_detail', [WebsiteController::class, 'customerDetail'])->name('customer_detail');
+Route::post('phone_authentication', [WebsiteController::class, 'phoneAuthentication'])->name('phone_authentication');
+Route::get('create_staff', [WebsiteController::class, 'createStaff'])->name('create_staff');
+Route::get('proposal', [WebsiteController::class, 'showProposal'])->name('proposal');
+Route::get('proposal_editor', [WebsiteController::class, 'proposalEditor'])->name('proposal_editor');
+Route::get('get_activities/{leadId}', [WebsiteController::class, 'getActivities'])->name('get_activities');
+
+
+Route::group(['middleware' => ['auth', 'roles'], 'roles' => 'admin'], function () {
+    //    Route::get('/dashboard', function () {
+    //        return view('dashboard.index');
+    //    });
+    Route::get('index2', function () {
+        return view('dashboard.index2');
+    });
+    Route::get('index3', function () {
+        return view('dashboard.index3');
+    });
+    Route::get('index4', function () {
+        return view('ecommerce.index4');
+    });
+    Route::get('products', function () {
+        return view('ecommerce.products');
+    });
+    Route::get('product-detail', function () {
+        return view('ecommerce.product-detail');
+    });
+    Route::get('product-edit', function () {
+        return view('ecommerce.product-edit');
+    });
+    Route::get('product-orders', function () {
+        return view('ecommerce.product-orders');
+    });
+    Route::get('product-cart', function () {
+        return view('ecommerce.product-cart');
+    });
+    Route::get('product-checkout', function () {
+        return view('ecommerce.product-checkout');
+    });
+    Route::get('panels-wells', function () {
+        return view('ui-elements.panels-wells');
+    });
+    Route::get('panel-ui-block', function () {
+        return view('ui-elements.panel-ui-block');
+    });
+    Route::get('portlet-draggable', function () {
+        return view('ui-elements.portlet-draggable');
+    });
+    Route::get('buttons', function () {
+        return view('ui-elements.buttons');
+    });
+    Route::get('tabs', function () {
+        return view('ui-elements.tabs');
+    });
+    Route::get('modals', function () {
+        return view('ui-elements.modals');
+    });
+    Route::get('progressbars', function () {
+        return view('ui-elements.progressbars');
+    });
+    Route::get('notification', function () {
+        return view('ui-elements.notification');
+    });
+    Route::get('carousel', function () {
+        return view('ui-elements.carousel');
+    });
+    Route::get('user-cards', function () {
+        return view('ui-elements.user-cards');
+    });
+    Route::get('timeline', function () {
+        return view('ui-elements.timeline');
+    });
+    Route::get('timeline-horizontal', function () {
+        return view('ui-elements.timeline-horizontal');
+    });
+    Route::get('range-slider', function () {
+        return view('ui-elements.range-slider');
+    });
+    Route::get('ribbons', function () {
+        return view('ui-elements.ribbons');
+    });
+    Route::get('steps', function () {
+        return view('ui-elements.steps');
+    });
+    Route::get('session-idle-timeout', function () {
+        return view('ui-elements.session-idle-timeout');
+    });
+    Route::get('session-timeout', function () {
+        return view('ui-elements.session-timeout');
+    });
+    Route::get('bootstrap-ui', function () {
+        return view('ui-elements.bootstrap');
+    });
+    Route::get('starter-page', function () {
+        return view('pages.starter-page');
+    });
+    Route::get('blank', function () {
+        return view('pages.blank');
+    });
+    Route::get('blank', function () {
+        return view('pages.blank');
+    });
+    Route::get('search-result', function () {
+        return view('pages.search-result');
+    });
+    Route::get('custom-scroll', function () {
+        return view('pages.custom-scroll');
+    });
+    Route::get('lock-screen', function () {
+        return view('pages.lock-screen');
+    });
+    Route::get('recoverpw', function () {
+        return view('pages.recoverpw');
+    });
+    Route::get('animation', function () {
+        return view('pages.animation');
+    });
+    Route::get('profile', function () {
+        return view('pages.profile');
+    });
+    Route::get('invoice', function () {
+        return view('pages.invoice');
+    });
+    Route::get('gallery', function () {
+        return view('pages.gallery');
+    });
+    Route::get('pricing', function () {
+        return view('pages.pricing');
+    });
+    Route::get('400', function () {
+        return view('pages.400');
+    });
+    Route::get('403', function () {
+        return view('pages.403');
+    });
+    Route::get('404', function () {
+        return view('pages.404');
+    });
+    Route::get('500', function () {
+        return view('pages.500');
+    });
+    Route::get('503', function () {
+        return view('pages.503');
+    });
+    Route::get('form-basic', function () {
+        return view('forms.form-basic');
+    });
+    Route::get('form-layout', function () {
+        return view('forms.form-layout');
+    });
+    Route::get('icheck-control', function () {
+        return view('forms.icheck-control');
+    });
+    Route::get('form-advanced', function () {
+        return view('forms.form-advanced');
+    });
+    Route::get('form-upload', function () {
+        return view('forms.form-upload');
+    });
+    Route::get('form-dropzone', function () {
+        return view('forms.form-dropzone');
+    });
+    Route::get('form-pickers', function () {
+        return view('forms.form-pickers');
+    });
+    Route::get('basic-table', function () {
+        return view('tables.basic-table');
+    });
+    Route::get('table-layouts', function () {
+        return view('tables.table-layouts');
+    });
+    Route::get('data-table', function () {
+        return view('tables.data-table');
+    });
+    Route::get('bootstrap-tables', function () {
+        return view('tables.bootstrap-tables');
+    });
+    Route::get('responsive-tables', function () {
+        return view('tables.responsive-tables');
+    });
+    Route::get('editable-tables', function () {
+        return view('tables.editable-tables');
+    });
+    Route::get('inbox', function () {
+        return view('inbox.inbox');
+    });
+    Route::get('inbox-detail', function () {
+        return view('inbox.inbox-detail');
+    });
+    Route::get('compose', function () {
+        return view('inbox.compose');
+    });
+    Route::get('contact', function () {
+        return view('inbox.contact');
+    });
+    Route::get('contact-detail', function () {
+        return view('inbox.contact-detail');
+    });
+    Route::get('calendar', function () {
+        return view('extra.calendar');
+    });
+    Route::get('widgets', function () {
+        return view('extra.widgets');
+    });
+    Route::get('morris-chart', function () {
+        return view('charts.morris-chart');
+    });
+    Route::get('peity-chart', function () {
+        return view('charts.peity-chart');
+    });
+    Route::get('knob-chart', function () {
+        return view('charts.knob-chart');
+    });
+    Route::get('sparkline-chart', function () {
+        return view('charts.sparkline-chart');
+    });
+    Route::get('simple-line', function () {
+        return view('icons.simple-line');
+    });
+    Route::get('fontawesome', function () {
+        return view('icons.fontawesome');
+    });
+    Route::get('map-google', function () {
+        return view('maps.map-google');
+    });
+    Route::get('map-vector', function () {
+        return view('maps.map-vector');
+    });
+
+    #Permission management
+    Route::get('permission-management', 'PermissionController@getIndex');
+    Route::get('permission/create', 'PermissionController@create');
+    Route::post('permission/create', 'PermissionController@save');
+    Route::get('permission/delete/{id}', 'PermissionController@delete');
+    Route::get('permission/edit/{id}', 'PermissionController@edit');
+    Route::post('permission/edit/{id}', 'PermissionController@update');
+
+    #Role management
+    Route::get('role-management', 'RoleController@getIndex');
+    Route::get('role/create', 'RoleController@create');
+    Route::post('role/create', 'RoleController@save');
+    Route::get('role/delete/{id}', 'RoleController@delete');
+    Route::get('role/edit/{id}', 'RoleController@edit');
+    Route::post('role/edit/{id}', 'RoleController@update');
+
+    #CRUD Generator
+    Route::get('/crud-generator', ['uses' => 'ProcessController@getGenerator']);
+    Route::post('/crud-generator', ['uses' => 'ProcessController@postGenerator']);
+
+    # Activity log
+    Route::get('activity-log', 'LogViewerController@getActivityLog');
+    Route::get('activity-log/data', 'LogViewerController@activityLogData')->name('activity-log.data');
+
+    #User Management routes
+    //    Route::get('users','UsersController@getIndex');
+    //    Route::get('user/create','UsersController@create');
+    //    Route::post('user/create','UsersController@save');
+    //    Route::get('user/edit/{id}','UsersController@edit');
+    //    Route::post('user/edit/{id}','UsersController@update');
+    //    Route::get('user/delete/{id}','UsersController@delete');
+    //    Route::get('user/deleted/','UsersController@getDeletedUsers');
+    //    Route::get('user/restore/{id}','UsersController@restoreUser');
+});
+
+//Log Viewer
+Route::get('log-viewers', '\Arcanedev\LogViewer\Http\Controllers\LogViewerController@index')->name('log-viewers');
+Route::get('log-viewers/logs', '\Arcanedev\LogViewer\Http\Controllers\LogViewerController@listLogs')->name('log-viewers.logs');
+Route::delete('log-viewers/logs/delete', '\Arcanedev\LogViewer\Http\Controllers\LogViewerController@delete')->name('log-viewers.logs.delete');
+Route::get('log-viewers/logs/{date}', '\Arcanedev\LogViewer\Http\Controllers\LogViewerController@show')->name('log-viewers.logs.show');
+Route::get('log-viewers/logs/{date}/download', '\Arcanedev\LogViewer\Http\Controllers\LogViewerController@download')->name('log-viewers.logs.download');
+Route::get('log-viewers/logs/{date}/{level}', '\Arcanedev\LogViewer\Http\Controllers\LogViewerController@showByLevel')->name('log-viewers.logs.filter');
+Route::get('log-viewers/logs/{date}/{level}/search', '\Arcanedev\LogViewer\Http\Controllers\LogViewerController@search')->name('log-viewers.logs.search');
+Route::get('log-viewers/logcheck', '\Arcanedev\LogViewer\Http\Controllers\LogViewerController@logCheck')->name('log-viewers.logcheck');
+
+
+// Social Login Routes
+Route::get('auth/{provider}/', [SocialLoginController::class, 'redirectToProvider']);
+Route::get('{provider}/callback', [SocialLoginController::class, 'handleProviderCallback']);
+
+// Logout Route
+Route::get('logout', [LoginController::class, 'logout']);
+
+// Auth Routes (Login, Register, Password Reset)
+Auth::routes();
+
+// Common Settings
+Route::resource('commonSetting/common-setting', CommonSettingController::class);
+Route::get('/clear-all', function () {
+    $exitCodeConfig = Artisan::call('storage:link');
+    $exitCodeConfig = Artisan::call('route:clear');
+    $exitCodeCache  = Artisan::call('cache:clear');
+    $exitCodeUpdate = Artisan::call('optimize:clear');
+    $exitCodeView   = Artisan::call('view:clear');
+    // $exitCodePermissionCache = Artisan::call('permission:cache-reset');
+    //$exitCodePermissionCache = Artisan::call('cache:forget laravelspatie.permission.cache');
+    return '<div style="text-align:center;"> <h1 style="text-align:center;">Cache and Config and permission cache are cleared.</h1><h4><a href="/">Go to home</a></h4></div>';
+});
+
+Route::get('/schedule-run', function () {
+    Artisan::call('schedule:run');
+});
+
+// Resource Routes - Laravel 11 Style
+Route::resource('customerType/customer-type', CustomerTypeController::class);
+Route::resource('customer/customer', CustomerController::class);
+Route::resource('customerPhone/customer-phone', CustomerPhoneController::class);
+Route::resource('referralSource/referral-source', ReferralSourceController::class);
+Route::resource('staff/staff', StaffController::class);
+Route::get('get_role_details_staff/{id?}', [StaffController::class, 'getRoleDetails'])->name('get_role_details_staff');
+
+
+Route::resource('category/category', 'Category\\CategoryController');
+Route::resource('salesMan/sales-man', 'SalesMan\\SalesManController');
+Route::get('get_role_details_sales_man/{id?}', 'SalesMan\\SalesManController@getRoleDetails')->name('get_role_details_sales_man');
+
+
+Route::resource('lead/lead', LeadController::class);
+Route::resource('yearEstimation/year-estimation', 'YearEstimation\\YearEstimationController');
+Route::resource('yearEstimateMonth/year-estimate-month', 'YearEstimateMonth\\YearEstimateMonthController');
+Route::resource('stage/stage', 'Stage\\StageController');
+Route::resource('appointment/appointment', 'Appointment\\AppointmentController');
+Route::resource('appointmentAttendee/appointment-attendee', 'AppointmentAttendee\\AppointmentAttendeeController');
+
+
+Route::post('upload_task_attachment', 'WebsiteController@uploadTaskAttachment')->name('upload_task_attachment');
+Route::get('remove_task_attachment/{image_name?}', 'WebsiteController@removeTaskAttachment')->name('remove_task_attachment');
+
+Route::post('upload_estimate_attachment', 'WebsiteController@uploadEstimateAttachment')->name('upload_estimate_attachment');
+Route::get('remove_estimate_attachment/{image_name?}', 'WebsiteController@removeEstimateAttachment')->name('remove_estimate_attachment');
+
+
+Route::post('upload_proposal_attachment', 'WebsiteController@uploadProposalAttachment')->name('upload_proposal_attachment');
+Route::get('remove_proposal_attachment/{image_name?}', 'WebsiteController@removeProposalAttachment')->name('remove_proposal_attachment');
+
+Route::post('upload_appointment_attachment', 'WebsiteController@uploadAppointmentAttachment')->name('upload_appointment_attachment');
+Route::get('remove_appointment_attachment/{image_name?}', 'WebsiteController@removeAppointmentAttachment')->name('remove_appointment_attachment');
+
+Route::post('upload_job_note_attachment', 'WebsiteController@uploadJobAttachment')->name('upload_job_note_attachment');
+Route::get('remove_job_note_attachment/{image_name?}', 'WebsiteController@removeJobAttachment')->name('remove_job_note_attachment');
+
+Route::post('upload_proposal_template_attachment', 'WebsiteController@uploadProposalTemplateAttachment')->name('upload_proposal_template_attachment');
+Route::get('remove_proposal_template_attachment/{image_name?}', 'WebsiteController@removeProposalTemplateAttachment')->name('remove_proposal_template_attachment');
+
+Route::post('upload_email_template_attachment', 'WebsiteController@uploadEmailTemplateAttachment')->name('upload_email_template_attachment');
+Route::get('remove_email_template_attachment/{image_name?}', 'WebsiteController@removeEmailTemplateAttachment')->name('remove_email_template_attachment');
+
+Route::post('upload_material_attachment', 'WebsiteController@uploadMaterialAttachment')->name('upload_material_attachment');
+Route::get('remove_material_attachment/{image_name?}', 'WebsiteController@removeMaterialAttachment')->name('remove_material_attachment');
+
+Route::post('upload_email_attachment', 'WebsiteController@uploadEmailAttachment')->name('upload_email_attachment');
+Route::post('email_send', 'WebsiteController@EmailSend')->name('email_send');
+Route::get('email_send', 'WebsiteController@EmailSend')->name('email_send');
+
+Route::post('update_lead_price', 'WebsiteController@updateLeadPrice')->name('update_lead_price');
+Route::post('update_positions', 'WebsiteController@updatePositions')->name('update_positions');
+Route::post('update_lead_positions', 'WebsiteController@updateLeadPositions')->name('update_lead_positions');
+
+Route::get('remove_email_attachment/{image_name?}', 'WebsiteController@removeEmailAttachment')->name('remove_email_attachment');
+
+Route::post('upload_photo_and_documents_attachment', 'WebsiteController@uploadPhotoAndDocumentsAttachment')->name('upload_photo_and_documents_attachment');
+Route::get('remove_photo_and_documents_attachment/{image_name?}', 'WebsiteController@removePhotoAndDocumentsAttachment')->name('remove_photo_and_documents_attachment');
+Route::get('lead_dropdown', 'WebsiteController@leadDropdown')->name('lead_dropdown');
+Route::get('reporting_for_stages', 'WebsiteController@reportingForStages')->name('reporting_for_stages');
+
+Route::resource('appointmentAttachment/appointment-attachment', 'AppointmentAttachment\\AppointmentAttachmentController');
+
+Route::get('logActivity', 'WebsiteController@logActivity');
+Route::get('delete_stream', 'WebsiteController@deleteStream')->name('delete_stream');
+Route::get('status_change_stages/{id?}/{status?}', 'WebsiteController@statusChangeStages')->name('status_change_stages');
+Route::get('status_change_campaign/{id?}/{status?}', 'WebsiteController@statusChangeCampaign')->name('status_change_campaign');
+Route::get('status_change_appointment/{id?}/{status?}', 'WebsiteController@statusChangeAppointment')->name('status_change_appointment');
+Route::get('status_change_jobnote/{id?}/{status?}', 'WebsiteController@statusChangeJobnote')->name('status_change_jobnote');
+Route::get('status_change_payment_type/{id?}/{status?}', 'WebsiteController@statusChangePaymentType')->name('status_change_payment_type');
+Route::get('status_change_mark/{id?}/{status?}', 'WebsiteController@statusChangeMark')->name('status_change_mark');
+Route::get('status_change_category/{id?}/{status?}', 'WebsiteController@statusChangeCategory')->name('status_change_category');
+Route::get('status_change_referral_source/{id?}/{status?}', 'WebsiteController@statusChangeReferralSource')->name('status_change_referral_source');
+Route::get('status_change_priority/{id?}/{status?}', 'WebsiteController@statusChangePriority')->name('status_change_priority');
+Route::get('status_change_notification/{id?}', 'WebsiteController@statusChangeNotification')->name('status_change_notification');
+Route::get('delete_logs/{id?}', 'WebsiteController@deleteLogs')->name('delete_logs');
+Route::get('view_lead/{id?}', 'WebsiteController@bySalesman')->name('view_lead')->middleware('auth');
+Route::get('stages_update', 'WebsiteController@stagesUpdate')->name('stages_update');
+Route::post('update_stage_automation', 'WebsiteController@updateStageAutomation')->name('update_stage_automation');
+Route::post('profile_update', 'WebsiteController@profileUpdate')->name('profile_update');
+Route::post('change_user_password', 'WebsiteController@changeUserPassword')->name('change_user_password');
+Route::post('/checkPassword', 'WebsiteController@checkpasswordvalid')->name('check_password');
+Route::post('/check_email', 'WebsiteController@checkEmail')->name('check_email');
+Route::get('/get_logs', 'WebsiteController@getLogs')->name('get_logs');
+Route::get('/lead_by_stages/{stage_id?}/{year?}', 'WebsiteController@leadByStages')->name('lead_by_stages');
+Route::get('view_appointment_detail', 'WebsiteController@viewAppointmentDetail')->name('view_appointment_detail');
+Route::post('view_appointment_detail', 'WebsiteController@viewAppointmentDetail')->name('view_appointment_detail');
+Route::post('edit_appointment_modal', 'WebsiteController@editAppointmentModal')->name('edit_appointment_modal');
+Route::post('delete_appointment_modal', 'WebsiteController@deleteAppointmentModal')->name('delete_appointment_modal');
+Route::get('email_send_change_order/{change_order_id?}', 'WebsiteController@emailSendChangeOrder')->name('email_send_change_order');
+Route::get('email_send_invoice/{invoice_id?}', 'WebsiteController@emailSendInvoice')->name('email_send_invoice');
+Route::get('email_send_receive_payment/{receive_payment_id?}', 'WebsiteController@emailSendReceivePayment')->name('email_send_receive_payment');
+Route::post('edit_task_modal', 'WebsiteController@editTaskModal')->name('edit_task_modal');
+Route::post('delete_task', 'WebsiteController@deleteTask')->name('delete_task');
+Route::post('view_task_detail', 'WebsiteController@viewTaskDetail')->name('view_task_detail');
+Route::get('task_detail', 'WebsiteController@taskDetail')->name('task_detail');
+Route::post('edit_jobNote_modal', 'WebsiteController@editJobNoteModal')->name('edit_jobNote_modal');
+Route::post('delete_jobNote', 'WebsiteController@deleteJobNote')->name('delete_jobNote');
+Route::post('view_jobNote_detail', 'WebsiteController@viewJobNoteDetail')->name('view_jobNote_detail');
+Route::post('edit_proposal_modal', 'WebsiteController@editProposalModal')->name('edit_proposal_modal');
+Route::post('delete_proposal', 'WebsiteController@deleteProposal')->name('delete_proposal');
+Route::post('view_proposal_detail', 'WebsiteController@viewProposalDetail')->name('view_proposal_detail');
+Route::post('edit_material_modal', 'WebsiteController@editMaterialModal')->name('edit_material_modal');
+Route::post('delete_material', 'WebsiteController@deleteMaterial')->name('delete_material');
+Route::post('view_material_detail', 'WebsiteController@viewMaterialDetail')->name('view_material_detail');
+Route::post('edit_receive_payment_detail', 'WebsiteController@editReceivePaymentDetail')->name('edit_receive_payment_detail');
+Route::post('delete_receive_payment', 'WebsiteController@deleteReceivePayment')->name('delete_receive_payment');
+Route::post('view_receive_payment_detail', 'WebsiteController@viewReceivePaymentDetail')->name('view_receive_payment_detail');
+Route::post('edit_change_order_modal', 'WebsiteController@editChangeOrderModal')->name('edit_change_order_modal');
+Route::post('edit_invoice_modal', 'WebsiteController@editInvoiceModal')->name('edit_invoice_modal');
+Route::post('view_change_order_detail', 'WebsiteController@viewChangeOrderDetail')->name('view_change_order_detail');
+Route::any('view_invoice_detail', 'WebsiteController@viewInvoiceDetail')->name('view_invoice_detail');
+Route::post('delete_invoice', 'Invoice\\InvoiceController@deleteInvoice')->name('delete_invoice');
+Route::post('view_invoice_balance_sheet_detail', 'WebsiteController@viewInvoiceBalanceSheetDetail')->name('view_invoice_balance_sheet_detail');
+Route::post('view_cogs_detail', 'WebsiteController@viewCOGSDetail')->name('view_cogs_detail');
+Route::post('view_cogs_modal_detail', 'WebsiteController@viewCOGSModalDetail')->name('view_cogs_modal_detail');
+Route::post('edit_cogs_modal', 'WebsiteController@editCOGSModalDetail')->name('edit_cogs_modal');
+Route::post('delete_order_change', 'WebsiteController@deleteOrderChange')->name('delete_order_change');
+Route::get('change_order_email', 'WebsiteController@changeOrderEmail')->name('change_order_email');
+Route::post('delete_cogs', 'WebsiteController@deleteCOGS')->name('delete_cogs');
+
+
+
+Route::get('sub_contractor_show/{id}', 'WebsiteController@subContractorShow');
+Route::get('sub_contractor_create', 'WebsiteController@subContractorCreate')->name('sub_contractor_create');
+
+Route::get('/changeOrder/change-order/create', 'WebsiteController@signature')->name('signature');
+Route::post('/changeOrder/change-order/create', 'WebsiteController@signatureStore');
+
+Route::resource('termAndCondition/term-and-condition', 'TermAndCondition\\TermAndConditionController');
+Route::resource('photoAndDocument/photo-and-document', 'PhotoAndDocument\\PhotoAndDocumentController');
+Route::resource('photoAndDocumentAttachment/photo-and-document-attachment', 'PhotoAndDocumentAttachment\\PhotoAndDocumentAttachmentController');
+Route::resource('task/task', 'Task\\TaskController');
+Route::resource('taskAttachments/task-attachments', 'TaskAttachments\\TaskAttachmentsController');
+Route::resource('taskAssignUser/task-assign-user', 'TaskAssignUser\\TaskAssignUserController');
+Route::resource('jobNote/job-note', 'JobNote\\JobNoteController');
+Route::resource('jobNoteAttachment/job-note-attachment', 'JobNoteAttachment\\JobNoteAttachmentController');
+Route::resource('userMailSend/user-mail-send', 'UserMailSend\\UserMailSendController');
+Route::resource('userMailSendAttachment/user-mail-send-attachment', 'UserMailSendAttachment\\UserMailSendAttachmentController');
+Route::resource('followUpCallNote/follow-up-call-note', 'FollowUpCallNote\\FollowUpCallNoteController');
+Route::resource('followUpCallNotesUser/follow-up-call-notes-user', 'FollowUpCallNotesUser\\FollowUpCallNotesUserController');
+Route::resource('estimate/estimate', 'Estimate\\EstimateController');
+Route::resource('estimateAttachment/estimate-attachment', 'EstimateAttachment\\EstimateAttachmentController');
+Route::resource('proposal/proposal', 'Proposal\\ProposalController');
+Route::resource('proposalAttachment/proposal-attachment', 'ProposalAttachment\\ProposalAttachmentController');
+Route::resource('receivePayment/receive-payment', 'ReceivePayment\\ReceivePaymentController');
+Route::resource('paymentType/payment-type', 'PaymentType\\PaymentTypeController');
+Route::resource('mark/mark', 'Mark\\MarkController');
+Route::resource('workCrew/work-crew', 'WorkCrew\\WorkCrewController');
+Route::resource('workCrewJobRepresentative/work-crew-job-representative', 'WorkCrewJobRepresentative\\WorkCrewJobRepresentativeController');
+Route::resource('workCrewCompanyCrew/work-crew-company-crew', 'WorkCrewCompanyCrew\\WorkCrewCompanyCrewController');
+Route::resource('workCrewLabour/work-crew-labour', 'WorkCrewLabour\\WorkCrewLabourController');
+Route::resource('progressBoard/progress-board', 'ProgressBoard\\ProgressBoardController');
+Route::resource('progressBoardCategory/progress-board-category', 'ProgressBoardCategory\\ProgressBoardCategoryController');
+Route::resource('material/material', 'Material\\MaterialController');
+Route::get('material_listing/{id}', 'Material\\MaterialController@materialListing');
+Route::resource('materialAttachment/material-attachment', 'MaterialAttachment\\MaterialAttachmentController');
+Route::resource('materialDeliveryDate/material-delivery-date', 'MaterialDeliveryDate\\MaterialDeliveryDateController');
+Route::resource('team/team', 'Team\\TeamController');
+Route::resource('priority/priority', 'Priority\\PriorityController');
+Route::resource('announcement/announcement', 'Announcement\\AnnouncementController');
+Route::resource('assignAnnouncement/assign-announcement', 'AssignAnnouncement\\AssignAnnouncementController');
+Route::get('months', 'WebsiteController@months')->name('months');
+Route::get('monthly_sales_report', 'WebsiteController@monthlySalesReport')->name('monthly_sales_report')->middleware('auth');
+Route::resource('changeOrder/change-order', 'ChangeOrder\\ChangeOrderController');
+Route::get('/changeOrder/change-order/fetch-address/{lead_id?}', 'WebsiteController@fetchAddress');
+Route::get('view_lead/get_customer_data/{customer_id}', 'WebsiteController@getCustomerData')->name('get_customer_data');
+Route::get('/invoice/invoice/fetch-data/{lead_id?}', 'WebsiteController@fetchData');
+Route::resource('changeOrderAttachment/change-order-attachment', 'ChangeOrderAttachment\\ChangeOrderAttachmentController');
+Route::resource('invoice/invoice', 'Invoice\\InvoiceController');
+Route::resource('invoiceAttachment/invoice-attachment', 'InvoiceAttachment\\InvoiceAttachmentController');
+Route::get('view_change_order_pdf', 'WebsiteController@viewChangeOrderPdf');
+Route::get('/fetch-emails', 'WebsiteController@fetchEmails')->name('fetch_emails');
+Route::resource('usersMailboxConfiguration/users-mailbox-configuration', 'UsersMailboxConfiguration\\UsersMailboxConfigurationController');
+Route::get('fetch_user_un_seen_emails_cron_job', 'EmailCronJobController@fetchUserUnSeenEmailsCronJob')->name('fetch_user_un_seen_emails_cron_job');
+Route::get('fetch_user_seen_emails_cron_job', 'EmailCronJobController@fetchUserSeenEmailsCronJob')->name('fetch_user_seen_emails_cron_job');
+Route::post('configuration/mail_configuration_store', 'WebsiteController@mailConfigurationStore')->name('mail_configuration_store');
+Route::get('mail_configuration', 'WebsiteController@mailConfiguration')->name('mail_configuration')->middleware('auth');
+Route::post('delete_trash_emails', 'WebsiteController@deleteTrashEmails')->name('delete_trash_emails');
+Route::post('store_campaign', 'WebsiteController@storeCampaign')->name('store_campaign');
+Route::post('update_campaign', 'WebsiteController@updateCampaign')->name('update_campaign');
+Route::put('update_campaign_play_or_resume/{id?}', 'WebsiteController@updateCampaignPlayOrResume')->name('update_campaign_play_or_resume');
+Route::get('delete_campaign/{id?}', 'WebsiteController@deleteCampaign')->name('delete_campaign');
+Route::get('delete_campaignDetail/{id?}', 'WebsiteController@deleteCampaignDetail')->name('delete_campaignDetail');
+Route::get('campaign_cron', 'WebsiteController@campaignCron')->name('campaign_cron');
+Route::resource('usersMailboxesSent/users-mailboxes-sent', 'UsersMailboxesSent\\UsersMailboxesSentController');
+Route::resource('campaign/campaign', 'Campaign\\CampaignController')->middleware('auth');
+Route::resource('campaignDetail/campaign-detail', 'CampaignDetail\\CampaignDetailController');
+Route::resource('reportPermission/report-permission', 'ReportPermission\\ReportPermissionController');
+Route::get('email_view/{id?}', 'WebsiteController@emailView')->name('email_view');
+Route::post('delete_inbox_emails/{id?}', 'WebsiteController@deleteInboxEmails')->name('delete_inbox_emails');
+Route::post('delete_emails', 'WebsiteController@deleteEmails')->name('delete_emails');
+Route::get('truncate_logs_activity', 'WebsiteController@truncateActivityLogCroneJob')->name('truncate_logs_activity'); //Daily after 24 hours.
+Route::get('notification', 'WebsiteController@notification')->name('notification');
+//Route::post('notification/store', 'WebsiteController@storeNotification')->name('store_notification');
+Route::get('notification/delete/{id?}', 'WebsiteController@deleteNotification')->name('delete_notification');
+Route::post('notification/delete/multiple', 'WebsiteController@notificationDeleteMultiple')->name('notification_delete_multiple');
+Route::get('stage/multiple/delete', 'WebsiteController@stageMultipleDelete')->name('stage_multiple_delete');
+Route::post('staff/multiple/delete', 'WebsiteController@staffMultipleDelete')->name('staff_multiple_delete');
+Route::post('customer_multiple_delete', 'WebsiteController@customerMultipleDelete')->name('customer_multiple_delete');
+Route::post('lead_multiple_delete', 'WebsiteController@leadMultipleDelete')->name('lead_multiple_delete');
+Route::post('/check_role', 'WebsiteController@checkRole')->name('check_role');
+Route::get('/send_email_to_users', 'WebsiteController@sendEmailToUsers')->name('send_email_to_users');
+Route::post('/add_email_to_lead', 'WebsiteController@addEmailToLead')->name('add_email_to_lead');
+Route::get('autocomplete_search_data', 'WebsiteController@autocompleteSearchData')->name('autocomplete_search_data');
+//Route::resource('notification/notification', 'Notification\\NotificationController');
+Route::resource('leadStage/lead-stage', 'LeadStage\\LeadStageController');
+Route::get('/task_assign_to_lead', 'WebsiteController@taskAssignToLead')->name('task_assign_to_lead');
+Route::get('/job_note_assign_to_lead', 'WebsiteController@jobNoteAssignToLead')->name('job_note_assign_to_lead');
+Route::get('update_stage_date/{id?}', 'WebsiteController@updateStageDate')->name('update_stage_date');
+Route::post('update_stage_date/{id?}', 'WebsiteController@updateStageDateModal')->name('update_stage_date_modal');
+Route::get('update_lead_status_date/{id?}', 'WebsiteController@updateLeadStatusDate')->name('update_lead_status_date');
+Route::resource('leadStage/lead-stage', 'LeadStage\\LeadStageController');
+Route::get('/estimate_proposal_assign_to_lead', 'WebsiteController@estimateProposalAssignToLead')->name('estimate_proposal_assign_to_lead');
+Route::post('/material_assign_to_lead', 'WebsiteController@materialAssignToLead')->name('material_assign_to_lead');
+Route::get('/annoucement_assign_to_users', 'WebsiteController@annoucementAssignToUsers')->name('annoucement_assign_to_users');
+
+Route::post('/message_assign_to_lead', 'WebsiteController@messageAssignToLead')->name('message_assign_to_lead');
+
+//twilio related routes
+Route::post('/incoming_messages', 'WebsiteController@incomingMessages');
+Route::post('/incoming_messages_error', 'WebsiteController@incomingMessagesError');
+//end twilio related routes
+Route::post('view_lead_message', 'WebsiteController@viewLeadMessage')->name('view_lead_message');
+
+Route::post('edit_lead_message', 'WebsiteController@editLeadMessage')->name('edit_lead_message');
+Route::post('delete_lead_message', 'WebsiteController@deleteLeadMessage')->name('delete_lead_message');
+Route::post('view_lead_mail', 'WebsiteController@viewLeadMail')->name('view_lead_mail');
+Route::post('edit_lead_mail', 'WebsiteController@editLeadMail')->name('edit_lead_mail');
+Route::post('delete_lead_mail', 'WebsiteController@deleteLeadMail')->name('delete_lead_mail');
+Route::resource('message/message', 'Message\\MessageController');
+Route::resource('leadMail/lead-mail', 'LeadMail\\LeadMailController');
+Route::post('/annoucement_assign_to_staff', 'WebsiteController@annoucementAssignToStaff')->name('annoucement_assign_to_staff');
+Route::resource('message/message', 'Message\\MessageController');
+Route::get('update_status_lead/{id?}/{status?}', 'WebsiteController@updateStatusLead')->name('update_status_lead');
+Route::post('update_status_lead_date/{id?}', 'WebsiteController@updateStatusLeadDate')->name('update_status_lead_date');
+Route::get('yearly_report/{id?}', 'WebsiteController@yearlyReport')->name('yearly_report')->middleware('auth');
+Route::get('category_status/{id?}/{status?}', 'WebsiteController@categoryStatus')->name('category_status');
+Route::get('material_status/{id?}/{status?}', 'WebsiteController@materialStatus')->name('material_status');
+Route::get('change_lead_date', 'WebsiteController@changeLeadDate')->name('change_lead_date');
+Route::get('get_email_template/{id?}', 'WebsiteController@getEmailTemplate')->name('get_email_template');
+Route::get('select_email_template', 'WebsiteController@selectEmailTemplate')->name('select_email_template');
+Route::get('get_proposal_template/{id?}', 'WebsiteController@getProposalTemplate')->name('get_proposal_template');
+Route::get('delete_lead_document/{photo_id?}', 'WebsiteController@deleteLeadDocument')->name('delete_lead_document');
+Route::get('photo_and_doc_document_primary_image/{photo_id?}/{lead_id?}', 'WebsiteController@photoAndDocDocumentPrimaryImage')->name('photo_and_doc_document_primary_image');
+Route::get('get_customer_detail/{customer_id?}', 'WebsiteController@getCustomerDetail')->name('get_customer_detail');
+Route::post('edit_status_year_esstimation', 'WebsiteController@editStatusYearEsstimation')->name('edit_status_year_esstimation');
+Route::resource('emailTemplate/email-template', 'EmailTemplate\\EmailTemplateController');
+Route::get('email_template_listing/{id}', 'EmailTemplate\\EmailTemplateController@emailTemplateListing')->name('email_template_listing');
+Route::resource('emailTemplateAttachment/email-template-attachment', 'EmailTemplateAttachment\\EmailTemplateAttachmentController');
+Route::post('delete_email_template', 'WebsiteController@deleteEmailTemplate')->name('delete_email_template');
+Route::get('edit_lead_job/{id?}', 'WebsiteController@editLeadJob')->name('edit_lead_job');
+Route::get('edit_client_details/{id?}', 'WebsiteController@editClientDetails')->name('edit_client_details');
+
+Route::get('map_view_lead', 'Lead\\LeadController@mapViewLead')->name('map_view_lead');
+Route::get('calender_task_view', 'Lead\\LeadController@calenderTaskView')->name('calender_task_view');
+Route::get('job_insurance_for_lead/{id?}', 'Lead\\LeadController@jobInsuranceForLead')->name('job_insurance_for_lead');
+Route::post('update_job_insurance_for_lead/{id?}', 'Lead\\LeadController@updateJobInsuranceForLead')->name('update_job_insurance_for_lead');
+Route::get('photos_for_custom_proposal/{id}', 'WebsiteController@photosForCustomProposal')->name('photos_for_custom_proposal');
+Route::get('calendar_appointment_view', 'Appointment\\AppointmentController@calendarAppointmentView')->name('calendar_appointment_view');
+Route::get('lead_card_view', 'Lead\\LeadController@leadCardView')->name('lead_card_view');
+Route::get('leads/export', 'Lead\\LeadController@exportLeads')->name('leads.export');
+Route::resource('proposalTemplate/proposal-template', 'ProposalTemplate\\ProposalTemplateController');
+Route::resource('proposalTemplateAttachment/proposal-template-attachment', 'ProposalTemplateAttachment\\ProposalTemplateAttachmentController');
+Route::resource('costOfGoodSold/cost-of-good-sold', 'CostOfGoodSold\\CostOfGoodSoldController');
+Route::resource('cogsMaterial/cogs-material', 'CogsMaterial\\CogsMaterialController');
+Route::get('status_change_cogs_material/{id?}/{status?}', 'CogsMaterial\\CogsMaterialController@statusChangeCogsMaterial')->name('status_change_cogs_material');
+Route::get('get_company_cam_project_list', 'WebsiteController@getCompanyCamProjectList')->name('get_company_cam_project_list');
+Route::get('store_company_cam_project', 'WebsiteController@storeCompanyCamProject')->name('store_company_cam_project');
+Route::get('user_view', 'Customer\\CustomerController@userView')->name('user_view');
+Route::get('customers/export', 'Customer\\CustomerController@export')->name('customers.export');
+Route::resource('companyContact/company-contact', 'CompanyContact\\CompanyContactController');
+Route::resource('customerCommunication/customer-communication', 'CustomerCommunication\\CustomerCommunicationController');
+Route::get('get_company_detail', 'Lead\\LeadController@getCompanyDetail');
+Route::get('appointment_report_table', 'Appointment\\AppointmentController@reportTable')->name('report_table');
+Route::get('appointment_report_table_first', 'Appointment\\AppointmentController@reportTableFirst')->name('report_table_first');
+Route::get('sales_weekly', 'Appointment\\AppointmentController@salesWeekly')->name('sales_weekly');
+Route::get('appointment_per_day', 'Appointment\\AppointmentController@getCalendarCsv');
+Route::get('store_photo_and_doc', 'WebsiteController@storePhotoAndDoc')->name('store_photo_and_doc');
+Route::get('cost_of_lead', 'WebsiteController@costOfLead')->name('cost_of_lead')->middleware('auth');
+Route::get('create_new_year_estimate/{id}', 'WebsiteController@createNewYearEstimate')->name('create_new_year_estimate');
+Route::get('view_estimation/{id}', 'WebsiteController@viewEstimation')->name('view_estimation')->middleware('auth');
+Route::get('yearly_advertising_report', 'WebsiteController@yearlyAdvertisingReport')->name('yearly_advertising_report');
+Route::get('status_change_lead_card_view/{id?}/{archive_status?}', 'Lead\\LeadController@statusChangeLeadCardView')->name('status_change_lead_card_view');
+Route::resource('advertisement/advertisement', 'Advertisement\\AdvertisementController');
+Route::resource('monthlyAdvertisement/monthly-advertisement', 'MonthlyAdvertisement\\MonthlyAdvertisementController');
+Route::get('get_lead_list_company_camp_project', 'Lead\\LeadController@getLeadListCompanyCampProject')->name('get_lead_list_company_camp_project');
+Route::post('delete_monthly_advertisement', 'Advertisement\\AdvertisementController@deleteReferralSource')->name('delete_monthly_advertisement');
+Route::get('get_document_company_camp', 'Lead\\LeadController@getDocumentCompanyCamp')->name('get_document_company_camp');
+
+Route::resource('schedulingTask/scheduling-task', 'SchedulingTask\\SchedulingTaskController');
+Route::resource('schedulingTaskUser/scheduling-task-user', 'SchedulingTaskUser\\SchedulingTaskUserController');
+Route::get('get_task_scheduling_id', 'WebsiteController@getSchedulingTask')->name('get_task_scheduling_id');
+Route::get('roof_estimation_calculator/{lead_id?}', 'WebsiteController@roofEstimationCalculator')->name('roof_estimation_calculator')->middleware('auth');
+Route::get('lead_detail/{lead_id?}', 'WebsiteController@leadDetail')->name('lead_detail');
+Route::get('get_leads_detail', 'WebsiteController@getLeadsDetail')->name('get_leads_detail');
+Route::get('roof_estimation_calculator_screen/{lead_id?}/{roof_estimation_calculator_id?}/{slug?}', 'WebsiteController@roofEstimationCalculatorScreen')->name('roof_estimation_calculator_screen');
+Route::get('siding_estimation_calculator/{lead_id?}', 'WebsiteController@sidingEstimationCalculator')->name('siding_estimation_calculator')->middleware('auth');
+Route::get('chimney_estimation_calculator/{lead_id?}', 'WebsiteController@chimneyEstimationCalculator')->name('chimney_estimation_calculator')->middleware('auth');
+Route::get('chimney_estimation_calculator_screen/{lead_id?}/{chimney_estimation_calculator_id?}/{slug?}', 'WebsiteController@chimneyEstimationCalculatorScreen')->name('chimney_estimation_calculator_screen');
+//Route::get('siding_estimation_calculator_replacement/{lead_id?}','WebsiteController@sidingEstimationCalculatorReplacement')->name('siding_estimation_calculator_replacement');
+//Route::get('siding_estimation_calculator_over_existing/{lead_id?}','WebsiteController@sidingEstimationCalculatorOverExisting')->name('siding_estimation_calculator_over_existing');
+//Route::get('siding_estimation_calculator_gutter/{lead_id?}','WebsiteController@sidingEstimationCalculatorGutter')->name('siding_estimation_calculator_gutter');
+Route::get('siding_estimation_calculator_screen/{lead_id?}/{siding_estimation_calculator_id?}/{slug?}', 'WebsiteController@sidingEstimationCalculatorScreen')->name('siding_estimation_calculator_screen');
+Route::post('store_siding_estimation_calculator', 'Lead\\LeadController@storeSidingEstimationCalculator')->name('store_siding_estimation_calculator');
+Route::post('store_chimney_estimation_calculator', 'Lead\\LeadController@storeChimneyEstimationCalculator')->name('store_chimney_estimation_calculator');
+Route::post('store_siding_replacement', 'SidingEstimateCalculator\\SidingEstimateCalculatorController@storeSidingReplacement')->name('store_siding_replacement');
+Route::post('store_siding_over_existing', 'SidingEstimateCalculator\\SidingEstimateCalculatorController@storeSidingOverExisting')->name('store_siding_over_existing');
+Route::post('store_product_pricing_estimation_calculator', 'Lead\\LeadController@storeProducPricingEstimateCalculator')->name('store_product_pricing_estimation_calculator');
+Route::post('product_pdf_material_list', 'Lead\\LeadController@productPdfMaterialList')->name('product_pdf_material_list');
+
+Route::post('update_task_scheduling', 'WebsiteController@updateSchedulingTask')->name('update_task_scheduling');
+Route::post('delete_task_scheduling', 'SchedulingTask\\SchedulingTaskController@deleteSchedulingTask')->name('delete_task_scheduling');
+Route::post('update_date_scheduling_task', 'SchedulingTask\\SchedulingTaskController@updateDateSchedulingTask')->name('update_date_scheduling_task');
+Route::post('update_date_appointments', 'Appointment\\AppointmentController@updateDateAppointment')->name('update_date_appointments');
+Route::post('store_roof_estimation_calculator', 'Lead\\LeadController@storeRoofEstimationCalculator')->name('store_roof_estimation_calculator');
+Route::post('store_roof_estimate_calculator_prefer', 'Lead\\LeadController@storeRoofEstimateCalculatorPrefer')->name('store_roof_estimate_calculator_prefer');
+Route::post('store_roof_estimate_calculator_system', 'Lead\\LeadController@storeRoofEstimateCalculatorSystem')->name('store_roof_estimate_calculator_system');
+Route::post('store_roof_estimate_calculator_under_fifteen_sq', 'Lead\\LeadController@storeRoofEstimateCalculatorUnderfifteenSQ')->name('store_roof_estimate_calculator_under_fifteen_sq');
+Route::post('store_roof_estimate_calculator_flat_roof', 'Lead\\LeadController@storeRoofEstimateCalculatorFlatRoof')->name('store_roof_estimate_calculator_flat_roof');
+Route::post('store_roof_estimate_calculator_gutters', 'Lead\\LeadController@storeRoofEstimateCalculatorGutter')->name('store_roof_estimate_calculator_gutters');
+Route::post('store_side_estimate_calculator_gutters', 'Lead\\LeadController@storeSideEstimateCalculatorGutter')->name('store_side_estimate_calculator_gutters');
+Route::post('store_chimney_estimate_calculator_chimney', 'Lead\\LeadController@storeChimneyEstimateCalculatorChimney')->name('store_chimney_estimate_calculator_chimney');
+Route::post('store_chimney_estimate_calculator_liner', 'Lead\\LeadController@storeChimneyEstimateCalculatorLiner')->name('store_chimney_estimate_calculator_liner');
+Route::post('store_product_pricing_calculator_material_list', 'Lead\\LeadController@storeProductPricingCalculatorMaterialList')->name('store_product_pricing_calculator_material_list');
+Route::post('store_product_pricing_calculator_price_list', 'Lead\\LeadController@storeProductPricingCalculatorPriceList')->name('store_product_pricing_calculator_price_list');
+Route::post('store_product_pricing_calculator_pdf_measurement', 'Lead\\LeadController@storeProductPricingCalculatorPdfMeasurement')->name('store_product_pricing_calculator_pdf_measurement');
+Route::post('store_progress_board', 'Lead\\LeadController@storeProgressBoard')->name('store_progress_board');
+Route::post('store_progress_task', 'Lead\\LeadController@storeProgressBoardTask')->name('store_progress_task');
+Route::get('edit_progress_task_modal', 'ProgressBoard\\ProgressBoardController@editProgressTaskModal')->name('edit_progress_task_modal');
+Route::post('update_progress_task', 'ProgressBoard\\ProgressBoardController@updateProgressTask')->name('update_progress_task');
+Route::post('update_progress_board_color', 'Lead\\LeadController@updateProgressBoardColor')->name('update_progress_board_color');
+Route::resource('roofEstimateCalculator/roof-estimate-calculator', 'RoofEstimateCalculator\\RoofEstimateCalculatorController');
+Route::resource('roofEstimateCalculatorLabel/roof-estimate-calculator-label', 'RoofEstimateCalculatorLabel\\RoofEstimateCalculatorLabelController');
+// Route::resource('roofEstimateCalculatorEaveRake/roof-estimate-calculator-eave-rake', 'RoofEstimateCalculatorEaveRake\\RoofEstimateCalculatorEaveRakeController');
+// Route::resource('roofEstimateCalculatorFlatArea/roof-estimate-calculator-flat-area', 'RoofEstimateCalculatorFlatArea\\RoofEstimateCalculatorFlatAreaController');
+// Route::resource('roofEstimateCalculatorDownspout/roof-estimate-calculator-downspout', 'RoofEstimateCalculatorDownspout\\RoofEstimateCalculatorDownspoutController');
+// Route::resource('roofestimatecalculatorpreferd/roofestimatecalculatorpreferd', 'Roofestimatecalculatorpreferd\\RoofestimatecalculatorpreferdController');
+// Route::resource('roofEstimateCalculatorSystem/roof-estimate-calculator-system', 'RoofEstimateCalculatorSystem\\RoofEstimateCalculatorSystemController');
+// Route::resource('storeRoofEstimateCalculatorUnderfifteenSQ/store-roof-estimate-calculator-underfifteen-s-q', 'StoreRoofEstimateCalculatorUnderfifteenSQ\\StoreRoofEstimateCalculatorUnderfifteenSQController');
+// Route::resource('roofEstimateCalculatorFlatRoof/roof-estimate-calculator-flat-roof', 'RoofEstimateCalculatorFlatRoof\\RoofEstimateCalculatorFlatRoofController');
+// Route::resource('storeRoofEstimateCalculatorGutter/store-roof-estimate-calculator-gutter', 'StoreRoofEstimateCalculatorGutter\\StoreRoofEstimateCalculatorGutterController');
+Route::resource('holiday/holiday', 'Holiday\\HolidayController');
+Route::resource('holidayDate/holiday-date', 'HolidayDate\\HolidayDateController');
+Route::get('/getCampaignEmailTemplate/{id}', 'WebsiteController@getCampaignEmailTemplate')->name('get_campaign_email_template');
+Route::get('update_status_change_order/{id?}/{status?}', 'WebsiteController@updateStatusChangeOrder')->name('update_status_change_order');
+Route::get('progress_board', 'WebsiteController@progressBoard')->name('progress_board')->middleware('auth');
+
+Route::resource('sidingEstimateCalculator/siding-estimate-calculator', 'SidingEstimateCalculator\\SidingEstimateCalculatorController');
+Route::resource('sidingEstimateCalculatorLabel/siding-estimate-calculator-label', 'SidingEstimateCalculatorLabel\\SidingEstimateCalculatorLabelController');
+//Route::resource('sidingEstimateCalculatorFlatArea/siding-estimate-calculator-flat-area', 'SidingEstimateCalculatorFlatArea\\SidingEstimateCalculatorFlatAreaController');
+//Route::resource('sidingEstimateCalculatorDownspout/siding-estimate-calculator-downspout', 'SidingEstimateCalculatorDownspout\\SidingEstimateCalculatorDownspoutController');
+//Route::resource('storeSideEstimateCalculatorGutter/store-side-estimate-calculator-gutter', 'StoreSideEstimateCalculatorGutter\\StoreSideEstimateCalculatorGutterController');
+Route::get('product_pricing_calculator/{lead_id?}', 'WebsiteController@productPricingEstimationCalculator')->name('product_pricing_calculator')->middleware('auth');
+Route::get('product_pricing_calculator_screen/{lead_id?}/{product_pricing_calculator_id?}/{slug?}', 'WebsiteController@productPricingEstimationCalculatorScreen')->name('product_pricing_calculator_screen');
+
+Route::get('side_base', 'SidingEstimateCalculator\\SidingEstimateCalculatorController@sideBase')->name('side_base');
+Route::get('roof_base', 'RoofEstimateCalculator\\RoofEstimateCalculatorController@roofBase')->name('roof_base');
+Route::get('chimney_base', 'ChimneyEstimateCalculator\\ChimneyEstimateCalculatorController@chimneyBase')->name('chimney_base');
+Route::resource('chimneyEstimateCalculator/chimney-estimate-calculator', 'ChimneyEstimateCalculator\\ChimneyEstimateCalculatorController');
+//Route::resource('chimneyEstimateCalculatorLabel/chimney-estimate-calculator-label', 'ChimneyEstimateCalculatorLabel\\ChimneyEstimateCalculatorLabelController');
+//Route::resource('chimneyEstimateBricksRow/chimney-estimate-bricks-row', 'ChimneyEstimateBricksRow\\ChimneyEstimateBricksRowController');
+//Route::resource('storeChimneyEstimateCalculatorChimney/store-chimney-estimate-calculator-chimney', 'StoreChimneyEstimateCalculatorChimney\\StoreChimneyEstimateCalculatorChimneyController');
+//Route::resource('storeChimneyEstimateCalculatorLiner/store-chimney-estimate-calculator-liner', 'StoreChimneyEstimateCalculatorLiner\\StoreChimneyEstimateCalculatorLinerController');
+
+Route::resource('productPricingEstimateCalculator/product-pricing-estimate-calculator', 'ProductPricingEstimateCalculator\\ProductPricingEstimateCalculatorController', [
+    'parameters' => [
+        'product-pricing-estimate-calculator' => 'ppe_calculator'
+    ]
+]);
+
+//Route::resource('productPricingEstimateCalculatorLabels/product-pricing-estimate-calculator-labels', 'ProductPricingEstimateCalculatorLabels\\ProductPricingEstimateCalculatorLabelsController');
+//Route::resource('productPricingEstimateCalculatorEaveRakes/product-pricing-estimate-calculator-eave-rakes', 'ProductPricingEstimateCalculatorEaveRakes\\ProductPricingEstimateCalculatorEaveRakesController');
+//Route::resource('productPricingEstimateCalculatorFlatArea/product-pricing-estimate-calculator-flat-area', 'ProductPricingEstimateCalculatorFlatArea\\ProductPricingEstimateCalculatorFlatAreaController');
+//Route::resource('productPricingEstimateCalculatorDownspouts/product-pricing-estimate-calculator-downspouts', 'ProductPricingEstimateCalculatorDownspouts\\ProductPricingEstimateCalculatorDownspoutsController');
+//Route::resource('storeProductPricingMaterialList/store-product-pricing-material-list', 'StoreProductPricingMaterialList\\StoreProductPricingMaterialListController');
+Route::resource('storeProductPricingPriceList/store-product-pricing-price-list', 'StoreProductPricingPriceList\\StoreProductPricingPriceListController');
+
+Route::resource('productPricingPriceList/product-pricing-price-list', 'ProductPricingPriceList\\ProductPricingPriceListController');
+Route::resource('productPricePdfMeasurement/product-price-pdf-measurement', 'ProductPricePdfMeasurement\\ProductPricePdfMeasurementController');
+Route::resource('productPricePdfTotal/product-price-pdf-total', 'ProductPricePdfTotal\\ProductPricePdfTotalController');
+Route::resource('productPricePdfAreaPitch/product-price-pdf-area-pitch', 'ProductPricePdfAreaPitch\\ProductPricePdfAreaPitchController');
+Route::post('update_lead_progress_status/{lead_id?}', 'WebsiteController@UpdateLeadProgressStatus')->name('update_lead_progress_status');
+
+Route::resource('emailTemplateVariable/email-template-variable', 'EmailTemplateVariable\\EmailTemplateVariableController');
+Route::resource('storeSideEstimateReplacement/store-side-estimate-replacement', 'StoreSideEstimateReplacement\\StoreSideEstimateReplacementController');
+Route::resource('storeSideEstimateOverExist/store-side-estimate-over-exist', 'StoreSideEstimateOverExist\\StoreSideEstimateOverExistController');
+Route::resource('calculatorSize/calculator-size', 'CalculatorSize\\CalculatorSizeController');
+Route::resource('emailVariableType/email-variable-type', 'EmailVariableType\\EmailVariableTypeController');
+Route::resource('productPriceSkylight/product-price-skylight', 'ProductPriceSkylight\\ProductPriceSkylightController');
+Route::resource('product/product', 'Product\\ProductController');
+Route::resource('productCategory/product-category', 'ProductCategory\\ProductCategoryController');
+
+Route::resource('productMaterialSection/product-material-section', 'ProductMaterialSection\\ProductMaterialSectionController');
+Route::get('get_photo_company_camp', 'WebsiteController@getPhotoCompanyCamp')->name('get_photo_company_camp');
+
+Route::post('folder/create', 'FolderManagement\\FolderManagementController@createFolder')->name('folder_create');
+Route::post('file/upload', 'FolderManagement\\FolderManagementController@uploadFolder')->name('file_upload');
+Route::get('folder/contents/{lead_id}', 'FolderManagement\\FolderManagementController@contents')->name('folder_contents');
+Route::post('delete_file', 'WebsiteController@deleteFile')->name('delete_file');
+Route::post('delete_folder', 'WebsiteController@deleteFolder')->name('delete_folder');
+Route::post('delete_permit', 'FolderManagement\\FolderManagementController@deletePermit')->name('delete_permit');
+Route::post('store_proposal', 'FolderManagement\\FolderManagementController@storeProposal')->name('store_proposal');
+Route::post('store_warranties', 'FolderManagement\\FolderManagementController@storeWarranty')->name('store_warranties');
+Route::post('delete_warranty', 'FolderManagement\\FolderManagementController@deleteWarranty')->name('delete_warranty');
+Route::post('delete_proposal', 'FolderManagement\\FolderManagementController@deleteProposal')->name('delete_proposal');
+Route::resource('folderManagement/folder-management', 'FolderManagement\\FolderManagementController');
+Route::resource('folderManagementAttachment/folder-management-attachment', 'FolderManagementAttachment\\FolderManagementAttachmentController');
+Route::get('lead_custom_proposal/{lead_id}', 'Proposal\\ProposalController@leadCustomProposal')->name('lead_custom_proposal');
+Route::get('sub_contractor_proposal_send/{id}', 'SubContractorProposal\\SubContractorProposalController@subContractorProposalEdit')->name('sub_contractor_proposal_send');
+Route::post('store_lead_proposal', 'WebsiteController@storeLeadCustomProposalScreen')->name('store_lead_proposal');
+Route::post('store_leads_custom_proposal', 'Proposal\\ProposalController@storeLeadsCustomProposal')->name('store_leads_custom_proposal');
+Route::delete('customize_proposals_delete/{id?}', 'Proposal\\ProposalController@customizeProposalsDelete')->name('customize_proposals_delete');
+Route::get('customer_proposal_view/{id}', 'WebsiteController@customerViewProposal')->name('customer_proposal_view')->middleware('auth');
+Route::post('update_proposal_order/{id}', 'Proposal\\ProposalController@updateProposalOrder')->name('update_proposal_order');
+Route::get('subcontractor_proposal_view/{id}/{lead_id}', 'WebsiteController@subContractorViewProposal')->name('customer_proposal_view')->middleware('auth');
+Route::post('store_customer_proposal_signature', 'WebsiteController@storeCustomerProposalSignature')->name('store_customer_proposal_signature')->middleware('auth');
+Route::post('store_contractor_proposal_signature', 'WebsiteController@storesubContractorProposalSignature')->name('store_contractor_proposal_signature');
+Route::get('holiday_status_change/{id?}/{status?}', 'WebsiteController@changeHolidayStatus')->name('change_holiday_status');
+Route::get('change_mark_status/{id?}/{status?}', 'WebsiteController@changeMarkStatus')->name('change_mark_status');
+Route::get('change_calculator_status/{id?}/{status?}', 'WebsiteController@changeCalculatorStatus')->name('change_calculator_status');
+Route::get('change_company_contact_status/{id?}/{insurance_status?}', 'WebsiteController@changeCompanyContactStatus')->name('change_company_contact_status');
+Route::get('change_staff_status/{id?}/{insurance_status?}', 'WebsiteController@changeStaffStatus')->name('change_staff_status');
+Route::resource('financeSheet/finance-sheet', 'FinanceSheet\\FinanceSheetController');
+Route::resource('financeGrossIncome/finance-gross-income', 'FinanceGrossIncome\\FinanceGrossIncomeController');
+Route::resource('financeCogs/finance-cogs', 'FinanceCogs\\FinanceCogsController');
+Route::resource('financeGrossExpense/finance-gross-expense', 'FinanceGrossExpense\\FinanceGrossExpenseController');
+Route::resource('financeOhExpense/finance-oh-expense', 'FinanceOhExpense\\FinanceOhExpenseController');
+Route::post('store_finance_oh', 'WebsiteController@storeFinanceOh')->name('store_finance_oh');
+Route::get('change_invoice_status/{id}/{status}', 'WebsiteController@changeInvoiceStatus')->name('change_invoice_status');
+Route::resource('campaignAttachment/campaign-attachment', 'CampaignAttachment\\CampaignAttachmentController');
+Route::resource('calculatorBaseValue/calculator-base-value', 'CalculatorBaseValue\\CalculatorBaseValueController');
+Route::post('store_siding', 'CalculatorBaseValue\\CalculatorBaseValueController@storeSideBaseValue')->name('store_siding');
+Route::post('store_roofing', 'CalculatorBaseValue\\CalculatorBaseValueController@storeRoofBaseValue')->name('store_roofing');
+//Route::post('store_roofing_preferred', 'CalculatorBaseValue\\CalculatorBaseValueController@storeRoofPreferredBaseValue')->name('store_roofing_preferred');
+Route::post('store_roof_base_prefer', 'CalculatorBaseValue\\CalculatorBaseValueController@storeRoofBasePrefer')->name('store_roof_base_prefer');
+Route::post('store_roof_base_system', 'CalculatorBaseValue\\CalculatorBaseValueController@storeRoofBaseSystem')->name('store_roof_base_system');
+Route::post('store_roof_base_under_sq', 'CalculatorBaseValue\\CalculatorBaseValueController@storeRoofBaseUnderSq')->name('store_roof_base_under_sq');
+Route::post('store_roof_base_gutter', 'CalculatorBaseValue\\CalculatorBaseValueController@storeRoofBaseGutter')->name('store_roof_base_gutter');
+Route::post('store_roof_base_flat_roof', 'CalculatorBaseValue\\CalculatorBaseValueController@storeRoofBaseFlatRoof')->name('store_roof_base_flat_roof');
+Route::post('store_side_base_replacement', 'CalculatorBaseValue\\CalculatorBaseValueController@storeSideBaseReplacement')->name('store_side_base_replacement');
+Route::post('store_side_base_over_existing', 'CalculatorBaseValue\\CalculatorBaseValueController@storeSideBaseOverExisting')->name('store_side_base_over_existing');
+Route::post('store_side_base_gutter', 'CalculatorBaseValue\\CalculatorBaseValueController@storeSideBaseGutter')->name('store_side_base_gutter');
+Route::post('store_roof_margin_profit', 'CalculatorBaseValue\\CalculatorBaseValueController@storeRoofMarginProfit')->name('store_roof_margin_profit');
+Route::post('store_siding_margin_profit', 'CalculatorBaseValue\\CalculatorBaseValueController@storeSideMarginProfit')->name('store_siding_margin_profit');
+Route::post('store_chimney_base_chimney', 'CalculatorBaseValue\\CalculatorBaseValueController@storeChimneyBaseChimney')->name('store_chimney_base_chimney');
+Route::post('store_chimney_margin_profit', 'CalculatorBaseValue\\CalculatorBaseValueController@storeChimneyMarginProfit')->name('store_chimney_margin_profit');
+Route::get('get_roof_base_value', 'RoofEstimateCalculator\\RoofEstimateCalculatorController@getRoofBaseValue')->name('get_roof_base_value');
+Route::get('get_siding_base_value', 'SidingEstimateCalculator\\SidingEstimateCalculatorController@getSidingBaseValue')->name('get_siding_base_value');
+Route::get('get_chimney_base_value', 'ChimneyEstimateCalculator\\ChimneyEstimateCalculatorController@getChimneyBaseValue')->name('get_chimney_base_value');
+Route::resource('userCheckIn/user-check-in', 'UserCheckIn\\UserCheckInController');
+Route::post('start_session', 'UserCheckIn\\UserCheckInController@storeCheckIn')->name('store_check_in');
+Route::post('stop_session', 'UserCheckIn\\UserCheckInController@storeCheckOut')->name('store_check_out');
+Route::get('get_active_session', 'UserCheckIn\\UserCheckInController@getActiveSession')->name('get_active_session');
+Route::post('pause_session', 'UserCheckIn\\UserCheckInController@pauseSession')->name('pause_session');
+Route::get('staff_time_clock/{id?}', 'Staff\\StaffController@staffTimeClock')->name('staff_time_clock');
+Route::get('edit_checkin_modal', 'Staff\\StaffController@editCheckInModal')->name('edit_checkin_modal');
+Route::post('update_checkin', 'Staff\\StaffController@updateCheckin')->name('update_checkin');
+
+Route::get('staff_salary_block', 'Staff\\StaffController@staffSalaryBlock')->name('staff_salary_block')->middleware('auth');
+Route::get('staff_benefits_block', 'Staff\\StaffController@staffBenefitsBlock')->name('staff_benefits_block')->middleware('auth');
+Route::get('staff_positions_block', 'Staff\\StaffController@staffPositionsBlock')->name('staff_positions_block')->middleware('auth');
+Route::get('admin-listing', 'WebsiteController@adminCheckInListing')->name('admin_check_in_listing')->middleware('auth');
+
+Route::resource('positionBlock/position-block', 'PositionBlock\\PositionBlockController');
+Route::post('update-positions', 'PositionBlock\\PositionBlockController@updatePositions')->name('positions.update');
+Route::post('update-salary-block', 'PositionBlock\\PositionBlockController@updateSalaryBlock')->name('salaryBlock.update');
+Route::get('get_position_record', 'PositionBlock\\PositionBlockController@getPositionRecord');
+Route::get('get_compensation_record', 'PositionBlock\\PositionBlockController@getcompensationRecord');
+Route::resource('staffFinance/staff-finance', 'StaffFinance\\StaffFinanceController');
+Route::resource('call/call', 'Call\\CallController');
+Route::get('edit_call_modal', 'Call\\CallController@editCallModal')->name('edit_call_modal');
+Route::post('update_call_modal', 'Call\\CallController@updateCallModal')->name('update_call');
+Route::post('delete_call', 'Call\\CallController@deleteCall')->name('delete_call');
+Route::post('upload_large_files', 'Call\\CallController@uploadLargeFiles')->name('upload_large_files');
+Route::get('get_calculator_price', 'WebsiteController@getCalculatorPrice')->name('get_calculator_price');
+Route::get('calendar_types', 'WebsiteController@getCalendarTypes')->name('calendar_types');
+Route::post('store_calendar_types', 'WebsiteController@storeCalendarTypes')->name('store_calendar_types');
+Route::get('verify_stage_finance', 'WebsiteController@validateFinanceStageBeforeAdd')->name('verify_stage_finance');
+Route::resource('emailTemplateFolder/email-template-folder', 'EmailTemplateFolder\\EmailTemplateFolderController');
+Route::resource('customerOwnerType/customer-owner-type', 'CustomerOwnerType\\CustomerOwnerTypeController');
+Route::resource('credit/credit', 'Credit\\CreditController');
+Route::post('edit_credit_modal', 'Credit\\CreditController@editCreditModal')->name('edit_credit_modal');
+Route::get('view_credit_modal', 'Credit\\CreditController@showCreditModal')->name('view_credit_modal');
+Route::post('delete_credit', 'Credit\\CreditController@deleteCredit')->name('delete_credit');
+Route::resource('refund/refund', 'Refund\\RefundController');
+Route::post('edit_refund_modal', 'Refund\\RefundController@editRefundModal')->name('edit_refund_modal');
+Route::get('view_refund_modal', 'Refund\\RefundController@showRefundModal')->name('view_refund_modal');
+Route::post('delete_refund', 'Refund\\RefundController@deleteRefund')->name('delete_refund');
+Route::get('cumulative_invoice', 'Invoice\\InvoiceController@invoiceCumulativeInvoice')->name('cumulative_invoice');
+Route::get('/view-proposal-pdf/{filename}', 'WebsiteController@viewProposalPdf')->name('viewProposalPdf');
+Route::get('/view-job-pdf/{filename}', 'WebsiteController@viewJoblPdf')->name('viewJoblPdf');
+Route::get('/subcontractor/pdf/{id}/{lead_id}', 'WebsiteController@viewSubContractorPdf')->name('viewSubContractorPdf');
+Route::get('/duplicate_material_name', 'WebsiteController@duplicateMaterialName')->name('duplicate_material_name');
+
+Route::resource('trade/trade', 'Trade\\TradeController');
+Route::post('store_subcontractor', 'WebsiteController@storeSubContractor');
+Route::resource('subContractorCompanyDetail/sub-contractor-company-detail', 'SubContractorCompanyDetail\\SubContractorCompanyDetailController');
+
+Route::resource('materialListing/material-listing', 'MaterialListing\\MaterialListingController');
+Route::get('delete_material_list', 'MaterialListing\\MaterialListingController@deleteMaterialList')->name('delete_material_list');
+Route::post('update_material_list', 'MaterialListing\\MaterialListingController@updateMaterialList')->name('update_material_list');
+Route::resource('subContractorInsuranceInfo/sub-contractor-insurance-info', 'SubContractorInsuranceInfo\\SubContractorInsuranceInfoController');
+
+Route::post('subcontractors/update-insurance', 'WebsiteController@updateSubContractorInsuranceInfo');
+Route::post('upload_insurance_attachment', 'WebsiteController@uploadInsuranceAttachment');
+Route::resource('subContractorRecurringEmail/sub-contractor-recurring-email', 'SubContractorRecurringEmail\\SubContractorRecurringEmailController');
+Route::post('update_insurance_agency_status', 'WebsiteController@updateInsuranceAgencyStatus');
+Route::resource('subContractorProposal/sub-contractor-proposal', 'SubContractorProposal\\SubContractorProposalController');
+Route::get('recurring_email', 'WebsiteController@sendExpirationReminders');
+Route::get('get_recurring_email_schedule', 'WebsiteController@getRecurringEmail');
+Route::get('delete_recurring_email_schedule', 'WebsiteController@deleteRecurringEmail');
+//Edit Modals Route
+Route::post('edit_product_modal', 'Product\\ProductController@editProductModal')->name('edit_product_modal');
+Route::post('edit_material_modal', 'Material\\MaterialController@editMaterialModal')->name('edit_material_modal');
+Route::post('edit_payment_type_modal', 'PaymentType\\PaymentTypeController@editPaymentTypeModal')->name('edit_payment_type_modal');
+Route::post('edit_product_category_modal', 'ProductCategory\\ProductCategoryController@editProductCategoryModal')->name('edit_product_category_modal');
+Route::post('edit_customer_owner_type_modal', 'CustomerOwnerType\\CustomerOwnerTypeController@editCustomerOwnerTypeModal')->name('edit_customer_owner_type_modal');
+
+Route::post('edit_mark_modal', 'Mark\\MarkController@editMarkModal')->name('edit_mark_modal');
+Route::post('edit_team_modal', 'Team\\TeamController@editTeamModal')->name('edit_team_modal');
+Route::post('edit_stage_modal', 'Stage\\StageController@editStageModal')->name('edit_stage_modal');
+Route::post('edit_priority_modal', 'Priority\\PriorityController@editPriorityModal')->name('edit_priority_modal');
+Route::post('edit_category_modal', 'Category\\CategoryController@editCategoryModal')->name('edit_category_modal');
+Route::post('edit_announcement_modal', 'Announcement\\AnnouncementController@editAnnouncementModal')->name('edit_announcement_modal');
+Route::post('edit_cogs_material_modal', 'CogsMaterial\\CogsMaterialController@editCogsMaterialModal')->name('edit_cogs_material_modal');
+Route::post('edit_email_template_folder_modal', 'EmailTemplateFolder\\EmailTemplateFolderController@editEmailTemplateFolderModal')->name('edit_email_template_folder_modal');
+
+//View Modals Route
+Route::get('view_stage_modal', 'Stage\\StageController@viewStageModal')->name('view_stage_modal');
+Route::get('view_holiday_modal', 'Holiday\\HolidayController@viewHolidayModal')->name('view_holiday_modal');
+Route::get('view_category_modal', 'Category\\CategoryController@viewCategoryModal')->name('view_category_modal');
+Route::get('view_email_template_folder_modal', 'EmailTemplateFolder\\EmailTemplateFolderController@viewEmailTemplateFolderModal')->name('view_email_template_folder_modal');
+
+Route::get('default_product', 'Product\\ProductController@defaultProduct')->name('default_product');
+Route::get('/get-product-categories/{product}', 'Product\\ProductController@getCategories');
+//Route::get('email_branding','EmailTemplateFolder\\EmailTemplateFolderController@emailBranding')->name('email_branding');
+
+
+Route::resource('roofEstimateSkylight/roof-estimate-skylight', 'RoofEstimateSkylight\\RoofEstimateSkylightController');
+Route::get('get_chimney_content_chimney', 'WebsiteController@getChimneyContentChimney');
+Route::get('get_chimney_content_liner', 'WebsiteController@getChimneyContentLiner');
+Route::get('get_siding_content_replacement', 'WebsiteController@getSidingContentReplacement');
+Route::get('get_siding_content_over_existing', 'WebsiteController@getSidingContentOverExisting');
+Route::get('get_siding_content_gutter', 'WebsiteController@getSidingContentGutter');
+
+Route::get('get_roof_content_preferred', 'WebsiteController@getRoofContentPreferred');
+Route::get('get_roof_content_system', 'WebsiteController@getRoofContentSystem');
+Route::get('get_roof_content_under_15_sq', 'WebsiteController@getRoofContentunderSq');
+Route::get('get_roof_content_gutter', 'WebsiteController@getRoofContentGutter');
+Route::get('get_roof_content_flat_roof', 'WebsiteController@getRoofContentFlatRoof');
+
+Route::post('store_default_setting_product', 'WebsiteController@storeDefaultSettingProduct')->name('store_default_setting_product');
+Route::resource('emailBranding/email-branding', 'EmailBranding\\EmailBrandingController');
+Route::post('store_email_branding', 'EmailBranding\\EmailBrandingController@storeEmailBranding');
+
+Route::group(['middleware' => ['auth', 'roles'], 'roles' => 'subcontractor'], function () {
+    Route::get('sub_contractor_dashboard', 'SubContractorController@dashboard')->name('sub_contractor_dashboard');
+    Route::get('sub_contractor_insurance_info', 'SubContractorController@insuranceInfo')->name('sub_contractor_insurance_info');
+    Route::get('work_orders/{status}', 'SubContractorController@workOrders')->name('work_orders');
+    Route::get('job/{status}', 'SubContractorController@job')->name('job');
+    Route::get('sub_contractor_work_orders_upcoming', 'SubContractorController@workOrdersUpcoming')->name('sub_contractor_work_orders_upcoming');
+    Route::get('sub_contractor_work_orders_signed', 'SubContractorController@workOrdersSigned')->name('sub_contractor_work_orders_signed');
+    Route::get('sub_contractor_jobs', 'SubContractorController@jobs')->name('sub_contractor_jobs');
+    Route::get('sub_contractor_jobs_details/{id}', 'SubContractorController@jobsDetails')->name('sub_contractor_jobs_details');
+    Route::get('sub_contractor_finance', 'SubContractorController@finance')->name('sub_contractor_finance');
+    Route::get('sub_contractor_profile', 'SubContractorController@profile')->name('sub_contractor_profile');
+    Route::post('update_subcontractor_profile', 'SubContractorController@updateProfile');
+});
+// Customer Role Routes - Laravel 11 Style
+Route::group(['middleware' => ['auth', 'roles'], 'roles' => 'customer'], function () {
+    Route::get('index-new', [CustomerController::class, 'indexNew'])->name('index-new');
+    Route::get('lead_measurement/{id}', [CustomerController::class, 'roofMeasurement'])->name('roof_measurement');
+    Route::get('customer-index', [CustomerController::class, 'customerIndex'])->name('customer-index');
+    Route::get('customer-chat', [CustomerController::class, 'customerChat'])->name('customer-chat');
+    Route::get('customer-management/{id?}', [CustomerController::class, 'customerManagement'])->name('customer-management');
+});
+
+Route::get('/import-leads', 'WebsiteController@importLeadsPage');
+Route::post('/import-leads', 'WebsiteController@importLeads')->name('import.leads');
+Route::get('lead-analysis', 'WebsiteController@leadAnalysis');
+Route::get('/export-analytics', 'WebsiteController@exportLeadAnalyticsToCsv');
+Route::get('historical_analysis', 'YearEstimation\\YearEstimationController@historicalAnalysis');
+Route::get('goal_analysis', 'YearEstimation\\YearEstimationController@goalAnalysis');
+Route::get('get-lead-details', 'SchedulingTask\\SchedulingTaskController@getLeadDetails');
+Route::post('appointment_delete', 'Appointment\\AppointmentController@deleteAppointment')->name('appointment_delete');
+Route::get('get_invoice_amount', 'ReceivePayment\\ReceivePaymentController@getInvoiceAmount');
+Route::resource('subContractorInvoice/sub-contractor-invoice', 'SubContractorInvoice\\SubContractorInvoiceController');
+//Route::resource('subContractorInvoiceAttachment/sub-contractor-invoice-attachment', 'SubContractorInvoiceAttachment\\SubContractorInvoiceAttachmentController');
+Route::get('get_lead_job', 'SubContractorInvoice\\SubContractorInvoiceController@getLeadJobs');
+Route::get('get_subcontractor_invoice', 'SubContractorInvoice\\SubContractorInvoiceController@getSubcontractorInvoice');
+Route::get('mark_job_complete', 'SubContractorController@markJobComplete');
+Route::resource('subContractorReceiveable/sub-contractor-receiveable', 'SubContractorReceiveable\\SubContractorReceiveableController');
+Route::post('create_receive', 'SubContractorReceiveable\\SubContractorReceiveableController@createReceive');
+Route::get('get_job_invoices', 'SubContractorReceiveable\\SubContractorReceiveableController@getJobInvoices');
+Route::get('get_job_receive', 'SubContractorReceiveable\\SubContractorReceiveableController@getJobReceive');
+
+Route::post('appointment_reminder_email', 'Appointment\\AppointmentController@appointmentReminderEmail');
+Route::post('appointment_complete', 'Appointment\\AppointmentController@appointmentComplete');
+Route::post('appointment_sms', 'Appointment\\AppointmentController@appointmentSms');
+
+Route::get('appointment_address/{id?}', 'WebsiteController@appointmentAddress')->name('appointment_address');
+Route::resource('chatMessage/chat-message', 'ChatMessage\\ChatMessageController');
+Route::get('get_lead_chat', 'ChatMessage\\ChatMessageController@getLeadChat');
+Route::post('send_chat_message', 'ChatMessage\\ChatMessageController@sendMessage');
+//Route::post('send_chat_message', 'ChatMessage\\ChatMessageController@sendMessage');
+Route::get('template_index', 'WebsiteController@templateIndex')->name('template_index');
+
+Route::resource('productTemplate/product-template', 'ProductTemplate\\ProductTemplateController');
+Route::resource('productListTemplate/product-list-template', 'ProductListTemplate\\ProductListTemplateController');
+
+Route::get('select_template', 'Material\\MaterialController@selectTemplate');
+Route::post('update_lead_template', 'Material\\MaterialController@updateLeadTemplate');
+Route::resource('proposalType/proposal-type', 'ProposalType\\ProposalTypeController');
+
+Route::post('staff_password_reset', 'Staff\\StaffController@staffPasswordReset');
+Route::get('view_payment_type_modal', 'PaymentType\\PaymentTypeController@viewPaymentTypeModal');
+Route::get('view_product_category_modal', 'ProductCategory\\ProductCategoryController@viewProductCategoryModal');
+Route::get('view_owner_type_modal', 'CustomerOwnerType\\CustomerOwnerTypeController@viewCustomerOwnerTypeModal');
+Route::get('view_priority_modal', 'Priority\\PriorityController@viewPriorityModal');
+Route::get('view_announcement_modal', 'Announcement\\AnnouncementController@viewAnnouncementModal');
+Route::get('view_mark_modal', 'Mark\\MarkController@viewMarkModal');
+Route::get('view_cogs_modal', 'CogsMaterial\\CogsMaterialController@viewCogsModal');
+Route::get('view_team_modal', 'Team\\TeamController@viewTeamModal');
+
+Route::get('marketing-spend-optimization', 'WebsiteController@marketingSpendOptimization')->name('marketing-spend-optimization');
+Route::get('marketing-analysis', 'ApiController@marketingAnalysis');
+
+Route::get('expense-prediction-leads', 'WebsiteController@expensePredictionLeads')->name('expense-prediction-leads')->middleware('auth');
+Route::get('dashboard-insights', 'WebsiteController@dashboardInsights')->name('dashboard-insights')->middleware('auth');
+Route::post('update-user-status/{id}', 'WebsiteController@updateUserStatus');
+Route::get('customer_match', 'Customer\\CustomerController@matchCustomer');
+
+// AI Tools Routes
+Route::get('ai_year_estimation', 'WebsiteController@aiYearEstimation')->name('ai_year_estimation')->middleware('auth');
+Route::post('ai_year_estimation_goal_analysis', 'WebsiteController@aiYearEstimationGoalAnalysis')->name('ai_year_estimation_goal_analysis');
+Route::get('ai_job_type_earnings_analysis', 'WebsiteController@aiJobTypeEarningsAnalysis')->name('ai_job_type_earnings_analysis')->middleware('auth');
+Route::get('earning-forecast', 'ApiController@earningPerJobWithForecast');
+Route::get('get_calculator_data', 'WebsiteController@getCalculatorData');
+Route::get('get_sales_report', 'ApiController@yearlyReportAnalysis');
+Route::get('get_seasonal_prediction', 'ApiController@seasonalPrediction');
+Route::get('get_category_prediction', 'ApiController@categoryPrediction');
+Route::get('get_job_cost_prediction', 'ApiController@jobCostPrediction');
+Route::get('get_job_margin_prediction', 'ApiController@jobMarginPrediction');
+Route::get('chatbot-assistant', function () {
+    $chatRoom = \App\ChatBotRoom::create(['name' => 'New Chat Created ' . now()]);
+    return redirect()->route('chatbot', ['roomId' => $chatRoom]);
+});
+Route::get('chatbot/{roomId}', 'WebsiteController@chatBot')->name('chatbot');
+Route::post('store_user_message', 'WebsiteController@storeUserMessage');
+Route::post('store_ai_message', 'WebsiteController@storeAiMessage');
+
+Route::get('customer_onboarding', 'Customer\\CustomerController@customerOnboarding')->name('customerOnboarding');
+Route::post('send_welcome_email_to_customers', 'Customer\\CustomerController@sendWelcomeEmailToCustomers')->name('send_welcome_email_to_customers');
+
+Route::resource('chatBotRoom/chat-bot-room', 'ChatBotRoom\\ChatBotRoomController');
+Route::resource('chatBotMessage/chat-bot-message', 'ChatBotMessage\\ChatBotMessageController');
+Route::resource('controlPanel/control-panel', ControlPanelController::class);
+Route::post('update_control', [ControlPanelController::class, 'updateControl']);
+Route::get('send_invoices', 'WebsiteController@sendInvoices');
+Route::post('send_invoice_single', 'WebsiteController@sendInvoiceSingle');
+Route::get('send_cumulative_invoice', 'WebsiteController@sendCumulativeInvoice');
+Route::get('send_balance_sheet', 'WebsiteController@sendBalanceSheet');
+Route::get('send_cogs_detail', 'WebsiteController@sendCogsDetail');
+Route::resource('customerReferral/customer-referral', 'CustomerReferral\\CustomerReferralController');
+Route::get('get_cam_photos', 'Customer\\CustomerController@getCamPhotos');
+Route::post('send_support_message', 'Customer\\CustomerController@sendSupportMessage');
+Route::get('get_support_messages', 'Customer\\CustomerController@getSupportMessage');
+Route::resource('workForceHour/work-force-hour', 'WorkForceHour\\WorkForceHourController');
+
+Route::get('support_chat', 'WebsiteController@supportChat')->name('support_chat')->middleware('auth');
+Route::get('lead_chat', 'WebsiteController@leadChat')->name('lead_chat')->middleware('auth');
+Route::get('referrals', 'WebsiteController@referrals')->name('referrals')->middleware('auth');
+Route::get('view_all_invoice_detail', 'WebsiteController@viewAllInvoiceDetail')->name('view_all_invoice_detail')->middleware('auth');

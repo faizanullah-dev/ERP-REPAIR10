@@ -1,0 +1,147 @@
+/* ================================================================================ */
+/* Media Querys  */
+/* ================================================================================ */
+/* ================ 1700 ================ */
+@media(max-width:1700px){
+    #sidebar h1 {
+        margin-bottom: 20px;
+    }
+
+    #side-menu li.active {
+        /* width: 92%; */
+    }
+
+    .sidebar-nav ul#side-menu li a {
+        /* padding: 14px 25px 14px 24px; */
+    }
+
+    #sidebar {
+        min-width: 200px;
+        max-width: 310px;
+    }}
+/* ================ 1600 ================ */
+@media(max-width:1600px){
+
+}
+@media(min-width:1600px){
+    .calender .full_calendar { max-height: 700px; }
+}
+/* ================ 1440 ================ */
+@media(max-width:1440px){
+    .single_calendar_box .calendar_content span span {font-size: 15px;}
+    #lead_view_ul li { padding: 0; }
+    #lead_view_ul li *:is(span, a) { padding: 0; font-size: 11px; }
+    .sales_performance_tabs_sec .job_title span { font-size: 14px; }
+    .sales_performance_tabs_sec .job_title button { padding: 8px 10px; }
+    .sales_performance_tabs_sec .job_title h2 { margin: 0; line-height: 1.2; font-size: 21px !important; }
+}
+
+/* ================ 1280 ================ */
+@media(max-width:1280px){
+
+
+    /*Qasim */
+    p{
+        font-size: 16px;
+    }
+    /*Qasim*/
+
+
+
+
+
+
+
+}
+
+@media(max-width:1199px){
+.mini-sidebar #sidebar { width: 0; height: 0; min-width: unset; max-width: unset; margin-left: -100%; position: absolute; left: 0; top: 0; } 
+.mini-sidebar .page-wrapper { margin-left: 0; }
+#sidebar { position: absolute; left: 0; width: 100%; min-width: unset; max-width: unset; } 
+.page-wrapper { margin-left: 0; } 
+body.mini-sidebar-open { overflow-y: hidden; }
+.sidebar .sidebar-header { display: flex; align-items: center; justify-content: space-between; padding: 15px; }
+.sidebar .sidebar-header .sidebar-toggle{display: block;}
+.sidebar .sidebar-header .sidebar-toggle .sidebartoggler i{ color: white; }
+.sidebar .sidebar-header .sidebar_logo { padding: 0; } 
+.sidebar .sidebar-header  .sidebar_logo .logo { width: 100%; margin: 0; }
+}
+/* ================ 1024 ================ */
+@media(max-width:1024px){
+
+}
+
+
+/* ================ 800 ================ */
+@media(max-width:800px){
+
+}
+
+@media(min-width: 768px) {
+    .mini-sidebar #sidebar  {width: 60px;max-width: 60px;min-width: 60px;}
+    .mini-sidebar #sidebar .sidebar_logo {padding: 25px 5px 15px 5px;        width: 60px;}
+    .extra.collapse li a span.hide-menu {
+        display: block ;
+    }
+
+    .extra.collapse.in li a.waves-effect span.hide-menu {
+        display: block ;
+    }
+
+    .extra.collapse li.active a.active span.hide-menu {
+        display: block ;
+    }
+
+    ul.side-menu li:hover + .extra.collapse.in li.active a.active span.hide-menu {
+        display: block ;
+    }
+}
+
+
+@media(max-width:768px){
+    #sidebar .scroll-sidebar { overflow-x: hidden !important; }
+    /* #sidebar { min-width: 60px; max-width: fit-content; } */
+    #sidebar .sidebar-nav .sidebar_logo { padding: 0; margin: 15px 0; }
+    .mini-sidebar .sidebar-nav #side-menu>li:hover>a { width: 60px; }
+    /*.mini-sidebar .sidebar-nav #side-menu>li>a span { font-size: 0; }*/
+    .mini-sidebar .sidebar-nav #side-menu>li>ul { top: 100%; background: #74c911; }
+    #sidebar .sidebar-nav .sidebar_logo .logo { width: 55px; height: auto; margin-left: 2px; }
+    .mini-sidebar .sidebar-nav #side-menu>li> a[aria-expanded="true"] span { font-size: 14px; }
+    .mini-sidebar .sidebar-nav #side-menu>li:hover > a[aria-expanded="true"] { width: auto; min-width: 250px; }
+    #sidebar .btn-offcanvas { border: 0; width: 60px; bottom: 10px; display: flex ; position: absolute; align-items: center; justify-content: center; background: transparent; }
+
+    #sidebar:is(.active) { min-width: 250px; }
+    /*#sidebar #side-menu li:is(.active) > a { width: auto; }*/
+    #sidebar #side-menu li:is(.active) > ul { display: block; }
+    #sidebar:is(.active) .sidebar-nav #side-menu>li>ul {width: 100%;}
+    #sidebar:is(.active) .scroll-sidebar { width: fit-content !important; }
+
+    #sidebar:is(.active) #side-menu > li > a { min-width: 250px; }
+    #sidebar:is(.active) #side-menu .hide-menu { display: inline-block; }
+}
+
+
+/* ================ 766 ================ */
+@media(max-width:766px){
+
+}
+
+
+/* ================ 600 ================ */
+@media(max-width:600px){
+
+}
+
+
+/* ================ 480 ================ */
+@media(max-width:480px){
+
+}
+
+
+/* ================ 320 ================ */
+@media(max-width:320px){
+
+}
+
+
